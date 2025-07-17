@@ -1,0 +1,258 @@
+<html>
+    <head>
+        <title>B21 color picker</title>
+        <style>
+            .picker {
+                display: flex;
+                flex-direction: row;
+                width: 60em;
+                border: 1px solid blue;
+            }
+
+            .left_pane {
+                display: flex;
+                flex-direction: column;
+                border: 1px solid pink;
+                width: 60%;
+            }
+
+            .right_pane {
+                display: flex;
+                flex-direction: column;
+                width: 30em;
+                border: 1px solid green;
+            }
+
+            .clipboard_values {
+                display: flex;
+                flex-direction: row;
+            }
+
+            .clipboard_color {
+                display: flex;
+            }
+
+            .clipboard_color_box {
+                display: flex;
+                width: 4em;
+                height: 4em;
+                border: 1px solid black;
+                border-radius: 0.5em;
+            }
+
+            .clipboard_rgb_hex {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .clipboard_rgb {
+                display: flex;
+                flex-direction: row;
+            }
+
+            .clipboard_hex {
+                display: flex;
+                flex-direction: row;
+            }
+
+            .color_sliders {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .color_slider {
+                position: relative;
+            }
+            
+            .copy_button {
+                display: flex;
+                align-items: center;
+                padding: 0;
+                color: black;
+                width: 1.5rem;
+                height: 1.5rem;
+                background-color: white;
+            }
+            
+            .picker_palette {
+                display: flex;
+                flex-direction: column;
+                width: 30em;
+                height: 30em;
+            }
+            
+            .palette {
+                display: flex;
+                width: 25em;
+                height: 25em;
+                border: 1px solid green;                
+            }
+            
+            .saturation_palette {
+                position: relative;
+                flex-grow: 1;
+                border-color: transparent;
+                border-bottom: 12px solid #000;
+                border-radius: 8px 8px 0 0;
+                background-image: 
+                    linear-gradient(to top,#000, transparent), 
+                    linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+                box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+            }
+            
+            .saturation_pointer {
+                display: flex;
+                z-index: 3;
+                position: absolute;
+                box-sizing: border-box;
+                width: 1.5em;
+                height: 1.5em;
+                place-content: center center;
+                transform: translate(-50%, -50%);
+                border: 2px solid #fff;
+                border-radius: 50%;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            
+            .hue_slider {
+                display: flex;
+                position: relative;
+                margin-top: 0.5em;
+                flex: 0 0 2em;
+                background: linear-gradient(to right, red 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, red 100%);
+            }
+            
+            .hue_pointer {
+                display: flex;
+                position: absolute;
+                z-index: 2;
+                box-sizing: border-box;
+                width: 1.5em;
+                height: 2.2em;
+                top: 50%;
+                place-content: center center;
+                transform: translate(-50%, -50%);
+                border: 2px solid #fff;
+                border-radius: 20%;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            
+            .alpha_slider {
+                display: flex;
+                position: relative;
+                margin-top: 0.5em;
+                flex: 0 0 24px;
+                background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill-opacity=".05"><rect x="8" width="8" height="8"/><rect y="8" width="8" height="8"/></svg>');
+                background: linear-gradient(90deg, hsla(59, 100%, 50%, 0), hsla(59, 100%, 50%, 1));
+            }
+            
+            .alpha_pointer {
+                position: absolute;
+                z-index: 1;
+                box-sizing: border-box;
+                width: 1.5em;
+                height: 2.2em;
+                top: 50%;
+                display: flex;
+                place-content: center center;
+                transform: translate(-50%, -50%);
+                border: 2px solid #fff;
+                border-radius: 20%;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                
+            }
+        </style>
+    </head>
+    <body>
+        <div class="picker">
+            <div class="left_pane">
+                <div class="clipboard_values">
+                    <div class="clipboard_color">
+                        <div class="clipboard_color_box foo bah" style="background: rgba(138, 136, 52, 0.42)"></div>
+                    </div>
+                    <div class="clipboard_rgb_hex">
+                        <div class="clipboard_rgb">
+                            <button class="copy_button">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
+                                    width="24" height="24" stroke-width="1.5" stroke="black" >
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"
+                                    ></path>
+                                </svg>
+                            </button>
+                            <input class="input grow sm:text-lg" aria-label="RGB Color" />
+                        </div>
+                        <!-- end clipboard_rgb  -->
+                        <!--]-->
+                        <div class="clipboard_hex">
+                            <button class="copy_button">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="">
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"
+                                    ></path>
+                                </svg>
+                            </button>
+                            <input class="input grow sm:text-lg" aria-label="Hex Color" />
+                        </div>
+                    </div>
+                    <!-- end clipboard_rgb_hex -->
+                </div>
+                <!-- end clipboard_values -->
+                <!--[!--><!--]-->
+                <div class="color_sliders">
+                    <!--[--><!--[-->
+                    <div class="color_slider">
+                        <label class="slider_label"
+                            ><span class="w-3 text-right">R</span>
+                            <input class="input w-[88px]" type="number" min="0" max="255" step="1" aria-label="r Channel Value"
+                        /></label>
+                        <input class="input-range w-full input-range-r" type="range" min="0" max="255" step="1" aria-label="r Channel Value" />
+                    </div>
+                    <!--]--><!--[-->
+                    <div class="color_slider">
+                        <label class="slider_label"
+                            ><span class="w-3 text-right">G</span>
+                            <input class="input w-[88px]" type="number" min="0" max="255" step="1" aria-label="g Channel Value"
+                        /></label>
+                        <input class="input-range w-full input-range-g" type="range" min="0" max="255" step="1" aria-label="g Channel Value" />
+                    </div>
+                    <!--]--><!--[-->
+                    <div class="color_slider">
+                        <label class="slider_label"
+                            ><span class="w-3 text-right">B</span>
+                            <input class="input w-[88px]" type="number" min="0" max="255" step="1" aria-label="b Channel Value"
+                        /></label>
+                        <input class="input-range w-full input-range-b" type="range" min="0" max="255" step="1" aria-label="b Channel Value" />
+                    </div>
+                    <!--]--><!--[-->
+                    <div class="color_slider">
+                        <label class="slider_label"
+                            ><span class="w-3 text-right">A</span>
+                            <input class="input w-[88px]" type="number" min="0" max="1" step="0.01" aria-label="alpha Channel Value"
+                        /></label>
+                        <input class="input-range w-full input-range-alpha" type="range" min="0" max="1" step="0.01" aria-label="alpha Channel Value" />
+                    </div>
+                    <!--]--><!--]-->
+                </div>
+            </div>
+            <!-- end left_pane -->
+            <div class="right_pane">
+                <div class="picker_palette">
+                    <div class="saturation_palette" style="background-color: rgb(255, 251, 0)">
+                        <div class="saturation_pointer" style="top: 46%; left: 62.1%;"></div>
+                    </div>
+                    <div class="hue_slider">
+                        <div class="hue_pointer" style="left: 16.3889%;"></div>
+                    </div>
+                    <div class="alpha_slider">
+                        <div class="alpha_pointer" style="left: 16.3889%;"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- end right_pane -->
+        </div>
+        <!-- end picker -->
+    </body>
+</html>
