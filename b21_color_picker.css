@@ -1,8 +1,21 @@
 #app_frame {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     width: fit-content;
-    border: 1px solid blue;
+    /* border: 1px solid blue; */
+}
+
+.page_title {
+    display: flex;
+    justify-content: center;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 2em;
+}
+
+.panes {
+    display: flex;
+    flex-direction: row;
 }
 
 #left_pane {
@@ -16,7 +29,7 @@
 #right_pane {
     display: flex;
     flex-direction: column;
-    border: 1px solid green;
+    /* border: 1px solid green; */
     position: relative;
 }
 
@@ -32,7 +45,7 @@
     position: relative;
     width: 512px;
     height: 512px;
-    border: 1px solid blue;
+    /* border: 1px solid blue; */
 }
 
 #wheel_chooser {
@@ -49,6 +62,7 @@
 .clipboard_values {
     display: flex;
     flex-direction: row;
+    margin-top: 2em;
 }
 
 .clipboard_values button {
@@ -62,7 +76,7 @@
 
 #clipboard_color_box {
     display: flex;
-    width: 4em;
+    width: 6.5em;
     height: 6.5em;
     border: 1px solid black;
     border-radius: 0.5em;
@@ -110,19 +124,27 @@
     height: 2em;                
 }
 
-#brightness_slider {
-    position: relative;
-    height: 2em;
-    width: 25em;
+.brightness_frame {
+    display: flex;
+    flex-direction: row;
     margin-top: 1em;
-    justify-content: center;
+    position: relative;
+}
+
+#brightness_slider {
+    position: absolute;
+    height: 3em;
+    width: 20em;
+    /* margin-top: 1em; */
+    top: 0;
+    left: 0;
     align-items: center;
-    display: flex;    
+    display: flex;   
 }
 
 #brightness_chooser {
-    width: 1em;
-    height: 3em;
+    width: 6%;
+    height: 4em;
     border: 2px solid lightgrey;
     border-radius: 0.3em;
     position: absolute;
@@ -131,7 +153,7 @@
 }
 
 #brightness_bg_light {
-    height: 2.5em;
+    height: 3em;
     width: 10em;
     border-top: 1px solid black;
     border-right: 1px solid black;
@@ -142,7 +164,7 @@
 }
 
 #brightness_bg_dark {
-    height: 2.5em;
+    height: 3em;
     width: 10em;
     border-top: 1px solid black;
     border-left: 1px solid black;

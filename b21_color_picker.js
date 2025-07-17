@@ -3,6 +3,10 @@
 class B21Picker {
     constructor() {
         const p = this;
+        
+        p.wheel_rgb = { r: 255, g: 144, b: 125 }; // CURRENT SELECTED COLOR
+        p.brightness_ratio = 0.5;
+        
         // Get the element references
         p.wheel_el = document.getElementById("wheel");
         p.wheel_chooser_el = document.getElementById("wheel_chooser");
@@ -11,7 +15,11 @@ class B21Picker {
         p.hex_value_el = document.getElementById("clipboard_hex_value");
         p.brightness_slider_el = document.getElementById("brightness_slider");
         p.brightness_chooser_el = document.getElementById("brightness_chooser");
-        
+        p.brightness_dark_el = document.getElementById("brightness_bg_dark");
+        p.brightness_light_el = document.getElementById("brightness_bg_light");
+        p.brightness_chooser_width_percent = 
+            100 * p.brightness_chooser_el.getBoundingClientRect().width / 
+            p.brightness_slider_el.getBoundingClientRect().width;
         // Color wheel canvas context
         p.ctx = p.wheel_el.getContext('2d', { willReadFrequently: true });
         
@@ -35,8 +43,19 @@ class B21Picker {
         //p.wheel_el.addEventListener("mouseout", (e) => { p.mouseup(e); });
         p.brightness_drag = false;
         
-        p.draw_color_wheel();
+        // Events for rgb / hex clipboard copy buttons
+        document.getElementById("copy_rgb").addEventListener("click", (e) => { p.copy_rgb(); })
+        document.getElementById("copy_hex").addEventListener("click", (e) => { p.copy_hex(); })
+        
+        p.draw_wheel();
+        
+        p.set_wheel(p.wheel_rgb);
+        p.set_brightness_chooser(50);
     }
+    
+    // *****************************************************
+    // COLOR WHEEL CONTROL
+    // *****************************************************
     
     wheel_mousedown(e) {
         const p = this;
@@ -59,60 +78,41 @@ class B21Picker {
         const y = e.offsetY/p.wheel_height_px;
         const d = Math.sqrt(Math.pow(x-0.5,2)+Math.pow(y-0.5,2));
         if (p.wheel_drag && d < 0.495) {
-            console.log(`mouse ${e.offsetX},${e.offsetY}`);
+            //console.log(`mouse ${e.offsetX},${e.offsetY}`);
             const px_colors = p.ctx.getImageData(e.offsetX, e.offsetY, 1, 1).data;
-            p.update_rgb({r: px_colors[0], g: px_colors[1], b: px_colors[2]});
+            p.wheel_rgb = { r: px_colors[0], g: px_colors[1], b: px_colors[2] };
+            p.set_wheel();
         }
     }
     
-    brightness_mousedown(e) {
+    set_wheel() {
         const p = this;
-        console.log(`brightness down at ${e.offsetX},${e.offsetY}`);
-        p.brightness_drag = true;
-        p.brightness_mousemove(e);
+        p.set_wheel_chooser();
+        p.set_brightness_background();
+        p.set_clipboard_values();
     }
     
-    brightness_mouseup(e) {
+    set_wheel_chooser() {
         const p = this;
-        console.log("brightness up");
-        p.brightness_drag = false;
-    }
-    
-    brightness_mouseout(e) {
-        const p = this;
-        console.log("brightness out");
-        //p.brightness_drag = false;
-    }
-    
-    brightness_mousemove(e) {
-        const p = this;
-        console.log("brightness move");
-        let slider_ratio = e.offsetX / p.brightness_slider_el.clientWidth;
-        let x_ratio = Math.max(0, Math.min(1, (slider_ratio - 0.1) / 0.8));
-        if (p.brightness_drag && slider_ratio > 0.1 && slider_ratio < 0.9) {
-            console.log("x_ratio", x_ratio);
-            p.brightness_chooser_el.style.left = (8 + x_ratio * 79).toFixed(1) + "%";
-        }
-    }
-    
-    update_rgb(rgb) {
-        const p = this;
-        let xy = p.rgb2xy(rgb);
-        let x_px = xy[0] * p.wheel_width_px;
-        let y_px = xy[1] * p.wheel_height_px;
-        console.log(`r=${rgb.r},g=${rgb.g},b=${rgb.b} at ${x_px.toFixed(0)},${y_px.toFixed(0)}`);
-        p.set_wheel_chooser(x_px, y_px);
-        p.set_color_box(rgb);
-        p.set_rgb_text(rgb);
-        p.set_hex_text(rgb);
-    }
-    
-    set_wheel_chooser(x_px, y_px) {
-        const p = this;
+        const xy = p.rgb2xy(p.wheel_rgb);
+        const x_px = xy[0] * p.wheel_width_px;
+        const y_px = xy[1] * p.wheel_height_px;
         const draw_x = x_px - p.wheel_chooser_width_px / 2;
         const draw_y = y_px - p.wheel_chooser_height_px / 2;
         p.wheel_chooser_el.style.left = `${draw_x.toFixed(1)}px`;
         p.wheel_chooser_el.style.top = `${draw_y.toFixed(1)}px`;
+    }
+    
+    // **************************************************
+    // COLOR BOX AND CLIPBOARD TEXT VALUES
+    // **************************************************
+    
+    set_clipboard_values() {
+        const p = this;
+        const rgb = p.v_adjust_rgb(p.wheel_rgb, p.brightness_ratio);
+        p.set_color_box(rgb);
+        p.set_rgb_text(rgb);
+        p.set_hex_text(rgb);
     }
     
     set_color_box(rgb) {
@@ -129,14 +129,101 @@ class B21Picker {
     
     set_hex_text(rgb) {
         const p = this;
+        p.hex_value_el.innerText = p.get_hex_str(rgb);
+    }
+    
+    get_hex_str(rgb) {
+        const p = this;
         let hex_str = "#";
         hex_str += ("0"+Math.round(rgb.r).toString(16).toUpperCase()).slice(-2);
         hex_str += ("0"+Math.round(rgb.g).toString(16).toUpperCase()).slice(-2);
         hex_str += ("0"+Math.round(rgb.b).toString(16).toUpperCase()).slice(-2);
-        p.hex_value_el.innerText = hex_str;
+        return hex_str;
     }
     
-    draw_color_wheel() {
+    copy_rgb() {
+        navigator.clipboard.writeText(p.rgb_value_el.innerText).then(
+            () => { console.log("rgb to clipboard"); },
+            () => { console.log("rgb to clipboard failed")
+        });
+    }
+    
+    copy_hex() {
+        navigator.clipboard.writeText(p.hex_value_el.innerText).then(
+            () => { console.log("rgb to clipboard"); },
+            () => { console.log("rgb to clipboard failed")
+        });
+    }
+    
+    // **********************************************
+    // BRIGHTNESS CONTROL
+    // **********************************************
+
+    brightness_mousedown(e) {
+        const p = this;
+        //console.log(`brightness down at ${e.offsetX},${e.offsetY}`);
+        p.brightness_drag = true;
+        p.brightness_mousemove(e);
+    }
+    
+    brightness_mouseup(e) {
+        const p = this;
+        //console.log("brightness up");
+        p.brightness_drag = false;
+    }
+    
+    brightness_mouseout(e) {
+        const p = this;
+        //console.log("brightness out");
+        //p.brightness_drag = false;
+    }
+    
+    brightness_mousemove(e) {
+        const p = this;
+        //console.log("brightness move");
+        if (p.brightness_drag) {
+            p.brightness_ratio = e.offsetX / p.brightness_slider_el.clientWidth;
+            //console.log("slider_ratio", slider_ratio);
+            p.set_brightness_chooser(p.brightness_ratio * 100);
+            p.set_clipboard_values();
+        }
+    }
+
+    v_adjust_rgb(rgb, brightness_ratio) {
+        const r = rgb.r;
+        const g = rgb.g;
+        const b = rgb.b;
+        if (brightness_ratio > 0.5) {
+            return { r: r + 2 * (brightness_ratio - 0.5) * (255 - r),
+                     g: g + 2 * (brightness_ratio - 0.5) * (255 - g),
+                     b: b + 2 * (brightness_ratio - 0.5) * (255 - b)
+            }
+        } else {
+            return { r: 2 * brightness_ratio * r,
+                    g: 2 * brightness_ratio * g,
+                    b: 2 * brightness_ratio * b
+            }
+        }
+    }
+    
+    set_brightness_background() {
+        const p = this;
+        let color_hex = p.get_hex_str(p.wheel_rgb);
+        p.brightness_dark_el.style.background = `linear-gradient(90deg,#000,${color_hex})`;
+        p.brightness_light_el.style.background = `linear-gradient(90deg,${color_hex},#FFF)`;
+    }
+    
+    set_brightness_chooser(brightness_percent) {
+        const p = this;
+        const offset_percent = p.brightness_chooser_width_percent / 2;
+        p.brightness_chooser_el.style.left = (brightness_percent-offset_percent).toFixed(1) + "%";
+    }
+    
+    // ********************************************
+    // Draw the HSV color wheel on startup
+    // ********************************************
+    
+    draw_wheel() {
         const p = this;
         let radius = 256;
         let image = p.ctx.createImageData(2*radius, 2*radius);
@@ -211,7 +298,8 @@ class B21Picker {
     }
     
     // hue in range [0, 360]
-    // saturation, value in range [0,1]
+    // saturation in range [0,1]
+    // value in range [0,1]
     // return [r,g,b] each in range [0,255]
     // See: https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
     hsv2rgb(hsv) {
@@ -241,7 +329,7 @@ class B21Picker {
     }
     
     // {r:,g:,b:} 0..255
-    // {h:,s:,v:} hue 0..360, saturation,value 0..1
+    // {h:,s:,v:} hue 0..360, saturation 0..1, value 0..1
     rgb2hsv(rgb) {
         let rabs, gabs, babs, rr, gg, bb, h, s, v, diff, diffc, percentRoundFn;
         rabs = rgb.r / 255;
