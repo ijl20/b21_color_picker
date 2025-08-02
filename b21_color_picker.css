@@ -102,7 +102,7 @@
     font-family: monospace;
     width: 14em;
     margin: 0.5em;
-    height: 2em;                
+    height: 2em;
 }
 
 .clipboard_hex {
@@ -121,7 +121,8 @@
     font-family: monospace;
     width: 14em;
     margin: 0.5em;
-    height: 2em;                
+    height: 2em;
+    text-align: center;
 }
 
 .brightness_frame {
@@ -139,7 +140,7 @@
     top: 0;
     left: 0;
     align-items: center;
-    display: flex;   
+    display: flex;
 }
 
 #brightness_chooser {
