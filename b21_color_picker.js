@@ -43,7 +43,8 @@ class B21Picker {
         //p.wheel_el.addEventListener("mouseout", (e) => { p.mouseup(e); });
         p.brightness_drag = false;
         
-        // Events for rgb / hex clipboard copy buttons
+        // Events for rgb / hex clipboard
+        p.hex_value_el.addEventListener("input", (e) => { p.hex_value_change(p, p.hex_value_el.value); })
         document.getElementById("copy_rgb").addEventListener("click", (e) => { p.copy_rgb(); })
         document.getElementById("copy_hex").addEventListener("click", (e) => { p.copy_hex(); })
         
@@ -127,9 +128,18 @@ class B21Picker {
         p.rgb_value_el.innerText = css_color;
     }
     
+    hex_value_change(p, hex_value) {
+        let rgba = p.hex2rgba(hex_value);
+        if (rgba != null) {
+            console.log(`hex_value_change '${hex_value}'`);
+            p.set_color_box(rgba);
+            p.set_rgb_text(rgba);
+        }
+    }
+    
     set_hex_text(rgb) {
         const p = this;
-        p.hex_value_el.innerText = p.get_hex_str(rgb);
+        p.hex_value_el.value = p.get_hex_str(rgb);
     }
     
     get_hex_str(rgb) {
@@ -262,6 +272,40 @@ class B21Picker {
             }
         }
         p.ctx.putImageData(image, 0, 0);
+    }
+    
+    // [#]RGB[A] or [#]RRGGBBAA
+    // Returns { r: 0..255, g: 0..255, b: 0..255, a: 0..1 }
+    // Returns null if invalid color hex
+    hex2rgba(hex_str) {
+        let s = hex_str;
+        if (s.startsWith("#")) {
+            s = s.slice(1);
+        }
+        let r = null;
+        let g = null;
+        let b = null;
+        let a = 1;
+        if (s.length == 3) {
+            r = Number("0x" + s.slice(0, 1) + s.slice(0, 1));
+            g = Number("0x" + s.slice(1, 2) + s.slice(1, 2));
+            b = Number("0x" + s.slice(2, 3) + s.slice(2, 3));
+        } else if (s.length == 6) {
+            r = Number("0x" + s.slice(0, 2));
+            g = Number("0x" + s.slice(2, 4));
+            b = Number("0x" + s.slice(4, 6));
+        } else if (s.length == 8) {
+            r = Number("0x" + s.slice(0, 2));
+            g = Number("0x" + s.slice(2, 4));
+            b = Number("0x" + s.slice(4, 6));
+            a = Number("0x" + s.slice(6, 8)) / 255;
+        } else {
+            return null;
+        }
+        if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(a)) {
+            return null;
+        }
+        return { r: r, g: g, b: b, a: a };
     }
     
     // [x,y] are 0..1 for proportion of width/height
