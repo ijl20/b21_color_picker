@@ -6,8 +6,9 @@ class B21Picker {
 
         p.VERSION = "1.0";
 
-        p.rgba = { r: 227, g: 142, b: 123, a: 0.8 };
+        p.rgba = { r: 255, g: 142, b: 123, a: 0.8 };
         p.brightness_adj = 0; // -1 .. 0 .. +1
+        p.wheel_rgb = { r: p.rgba.r, g: p.rgba.g, b: p.rgba.b };
 
         // Get the element references
         p.wheel_el = document.getElementById("wheel");
@@ -71,6 +72,7 @@ class B21Picker {
         const p = this;
         //console.log(`mouseup at ${e.offsetX.toFixed(0)},${e.offsetY.toFixed(0)}`);
         p.wheel_drag = false;
+        p.set_brightness_chooser(p.brightness_adj);
     }
 
     wheel_mousemove(e) {
@@ -81,23 +83,22 @@ class B21Picker {
         const y = e.offsetY/p.wheel_height_px;
         const d = Math.sqrt(Math.pow(x-0.5,2)+Math.pow(y-0.5,2));
         if (p.wheel_drag && d < 0.495) { // check move is within color circle
-            console.log(`mouse ${e.offsetX},${e.offsetY}`);
+            //console.log(`mouse ${e.offsetX},${e.offsetY}`);
             const px_colors = p.ctx.getImageData(e.offsetX, e.offsetY, 1, 1).data;
-            const click_rgb = {r: px_colors[0], g: px_colors[1], b: px_colors[2]};
-            const v = p.rgb2hsv(p.rgba).v;
-            const rgb = p.brightness_adjust_rgb(click_rgb, p.brightness_adj);
-            console.log(`mouse rgb: ${JSON.stringify(click_rgb)}, v: ${v}, rgb: ${JSON.stringify(rgb)}`);
-            p.rgba.r = rgb.r;
-            p.rgba.g = rgb.g;
-            p.rgba.b = rgb.b;
+            p.wheel_rgb = {r: px_colors[0], g: px_colors[1], b: px_colors[2]};
+            //p.brightness_adj = 0;
+            const adj_rgb = p.brightness_adjust_rgb(p.wheel_rgb, p.brightness_adj);
+            p.rgba.r = adj_rgb.r;
+            p.rgba.g = adj_rgb.g;
+            p.rgba.b = adj_rgb.b;
             p.set_wheel(p.rgba);
         }
     }
 
     set_wheel(rgba) {
         const p = this;
-        p.set_wheel_chooser(rgba);
-        p.set_brightness_background(rgba);
+        p.set_wheel_chooser(p.wheel_rgb);
+        p.set_brightness_background(p.wheel_rgb);
         //let hsv = p.rgb2hsv(rgba);
         //p.set_brightness_chooser(hsv.v);
         p.set_clipboard_values(rgba);
@@ -112,6 +113,8 @@ class B21Picker {
         const draw_y = y_px - p.wheel_chooser_height_px / 2;
         p.wheel_chooser_el.style.left = `${draw_x.toFixed(1)}px`;
         p.wheel_chooser_el.style.top = `${draw_y.toFixed(1)}px`;
+        const rgb = p.contrast_rgb(rgba);
+        p.wheel_chooser_el.style.borderColor = `rgb(${rgb.r.toFixed(0)},${rgb.g.toFixed(0)},${rgb.b.toFixed(0)})`;
     }
 
     // **************************************************
@@ -129,6 +132,7 @@ class B21Picker {
         const p = this;
         const css_color = `rgb(${rgb.r.toFixed(0)},${rgb.g.toFixed(0)},${rgb.b.toFixed(0)})`;
         p.color_box_el.style.backgroundColor = css_color;
+        console.log(`set_color_box ${css_color}`);
     }
 
     set_rgb_text(rgb) {
@@ -143,8 +147,18 @@ class B21Picker {
             console.log(`hex_value_change '${hex_value}'`);
             p.set_color_box(rgba);
             p.set_rgb_text(rgba);
+            let hsv = p.rgb2hsv(rgba);
+            hsv.v = 1;
+            p.wheel_rgb = p.hsv2rgb(hsv);
+            p.set_wheel_chooser(p.wheel_rgb);
+            p.set_brightness_background(p.wheel_rgb);
+            const max_pixel = Math.max(Math.max(rgba.r, rgba.g),rgba.b);
+            p.brightness_adj = max_pixel >= 255 ? 0 : -(1-max_pixel/255);
+            p.set_brightness_chooser(p.brightness_adj);
         }
     }
+
+    //DEBUG will need similar rgb_value_change for cut/paste
 
     set_hex_text(rgb) {
         const p = this;
@@ -204,7 +218,7 @@ class B21Picker {
             let slider_ratio = e.offsetX / p.brightness_slider_el.clientWidth;
             p.brightness_adj = 2 * (slider_ratio - 0.5);
             p.set_brightness_chooser(p.brightness_adj);
-            const rgb = p.brightness_adjust_rgb(p.rgba, p.brightness_adj);
+            const rgb = p.brightness_adjust_rgb(p.wheel_rgb, p.brightness_adj);
             p.rgba.r = rgb.r;
             p.rgba.g = rgb.g;
             p.rgba.b = rgb.b;
@@ -215,11 +229,10 @@ class B21Picker {
     brightness_adjust_rgb(rgba, brightness_adj) {
         const p = this;
 
-        let wheel_rgb = p.rgba2wheelrgb(rgba);
-        console.log(`brightness_adj: ${p.brightness_adj.toFixed(2)} wheel_rgb: ${JSON.stringify(wheel_rgb)}`);
-        const r = wheel_rgb.r;
-        const g = wheel_rgb.g;
-        const b = wheel_rgb.b;
+        //console.log(`brightness_adj: ${p.brightness_adj.toFixed(2)} wheel_rgb: ${JSON.stringify(wheel_rgb)}`);
+        const r = p.wheel_rgb.r;
+        const g = p.wheel_rgb.g;
+        const b = p.wheel_rgb.b;
         if (brightness_adj > 0) {
             return { r: r + brightness_adj * (255 - r),
                      g: g + brightness_adj * (255 - g),
@@ -240,9 +253,8 @@ class B21Picker {
         let hsv = p.rgb2hsv(rgba);
     }
 
-    set_brightness_background(rgba) {
+    set_brightness_background(wheel_rgb) {
         const p = this;
-        let wheel_rgb = p.rgba2wheelrgb(rgba);
         let color_hex = p.get_hex_str(wheel_rgb);
         p.brightness_dark_el.style.background = `linear-gradient(90deg,#000,${color_hex})`;
         p.brightness_light_el.style.background = `linear-gradient(90deg,${color_hex},#FFF)`;
@@ -340,12 +352,6 @@ class B21Picker {
         return p.hsv2xy(hsv);
     }
 
-    rgba2wheelrgb(rgba) {
-        const p = this;
-        let wheel_hsv = p.rgb2hsv(rgba);
-        return p.hsv2rgb({ h: wheel_hsv.h, s: wheel_hsv.s, v: 1 });
-    }
-
     // [x,y] are 0..1 for proportion of width/height
     xy2polar(x,y) {
         let r = Math.sqrt(x*x + y*y);
@@ -441,4 +447,8 @@ class B21Picker {
         };
     }
 
+    contrast_rgb(rgba) {
+        const p = this;
+        return { r:0, g:0, b:0 };
+    }
 } // end B21Picker
